@@ -9,7 +9,7 @@ const getGenAI = () => {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 };
 
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-2.5-flash';
 
 // POST /api/ai/insights/:fileId
 router.post('/insights/:fileId', async (req, res) => {
