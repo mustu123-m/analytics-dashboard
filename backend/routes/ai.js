@@ -1,14 +1,15 @@
 const express = require('express');
-// OpenAI v6: default export
-const OpenAI = require('openai').default || require('openai');
+const { GoogleGenAI } = require('@google/genai');
 const { dataStore } = require('./upload');
 
 const router = express.Router();
 
-const getOpenAI = () => {
-  if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not set in .env');
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const getGenAI = () => {
+  if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not set in .env');
+  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 };
+
+const MODEL = 'gemini-2.0-flash';
 
 // POST /api/ai/insights/:fileId
 router.post('/insights/:fileId', async (req, res) => {
@@ -16,7 +17,7 @@ router.post('/insights/:fileId', async (req, res) => {
   if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
 
   try {
-    const openai = getOpenAI();
+    const ai = getGenAI();
     const { columns, summary, data } = dataset;
 
     const numericStats = columns
@@ -30,7 +31,7 @@ router.post('/insights/:fileId', async (req, res) => {
       .map(c => `  ${c.name}: ${c.stats.uniqueCount} unique, top=${c.stats.topValues?.map(v => v.value).join(', ')}`)
       .join('\n');
 
-    const prompt = `You are a senior data analyst. Analyze this dataset and respond with a JSON object ONLY (no markdown, no backticks).
+    const prompt = `You are a senior data analyst. Analyze this dataset and respond with a JSON object ONLY (no markdown, no backticks, no extra text).
 
 Dataset: "${dataset.fileName}"
 Rows: ${summary.totalRows}, Columns: ${summary.totalColumns}, Completeness: ${summary.completeness}%
@@ -53,17 +54,13 @@ JSON schema to return:
   "predictiveOpportunities": "1-2 sentences on ML/forecasting use cases"
 }`;
 
-    // OpenAI v6: same chat.completions.create API, model names unchanged
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
-      max_tokens: 1200,
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
     });
 
-    const text = response.choices[0].message.content.trim();
-    const clean = text.replace(/```json|```/g, '').trim();
-    const insights = JSON.parse(clean);
+    const text = response.text.replace(/```json|```/g, '').trim();
+    const insights = JSON.parse(text);
 
     res.json({ success: true, insights, generatedAt: new Date().toISOString() });
   } catch (err) {
@@ -81,10 +78,10 @@ router.post('/chat/:fileId', async (req, res) => {
   if (!message) return res.status(400).json({ error: 'Message is required' });
 
   try {
-    const openai = getOpenAI();
+    const ai = getGenAI();
     const { columns, summary, data } = dataset;
 
-    const systemPrompt = `You are an expert data analyst helping users understand their dataset.
+    const systemInstruction = `You are an expert data analyst helping users understand their dataset.
 
 Dataset: "${dataset.fileName}"
 Rows: ${summary.totalRows}, Columns: ${summary.totalColumns}, Completeness: ${summary.completeness}%
@@ -96,20 +93,21 @@ Sample rows: ${JSON.stringify(data.slice(0, 10))}
 
 Be concise, precise, and data-driven.`;
 
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...history.slice(-8).map(h => ({ role: h.role, content: h.content })),
-      { role: 'user', content: message },
-    ];
+    // Build conversation history in Gemini format
+    const geminiHistory = history.slice(-8).map(h => ({
+      role: h.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: h.content }],
+    }));
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages,
-      temperature: 0.3,
-      max_tokens: 600,
+    const chat = ai.chats.create({
+      model: MODEL,
+      config: { systemInstruction },
+      history: geminiHistory,
     });
 
-    res.json({ reply: response.choices[0].message.content, usage: response.usage });
+    const response = await chat.sendMessage({ message });
+
+    res.json({ reply: response.text });
   } catch (err) {
     console.error('AI chat error:', err.message);
     res.status(500).json({ error: err.message });
