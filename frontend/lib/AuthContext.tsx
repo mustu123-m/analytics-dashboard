@@ -10,14 +10,26 @@ interface AuthCtx {
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthCtx>({ user: null, loading: true, setUser: () => {}, signOut: async () => {} });
+const AuthContext = createContext<AuthCtx>({
+  user: null, loading: true, setUser: () => {}, signOut: async () => {},
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getMe().then(({ user }) => setUser(user)).catch(() => setUser(null)).finally(() => setLoading(false));
+    // Only try if a token exists in localStorage
+    const token = localStorage.getItem('dp_token');
+    if (!token) { setLoading(false); return; }
+
+    getMe()
+      .then(({ user }) => setUser(user))
+      .catch(() => {
+        localStorage.removeItem('dp_token'); // token expired/invalid
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const signOut = async () => {
@@ -25,7 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  return <AuthContext.Provider value={{ user, loading, setUser, signOut }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading, setUser, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);
