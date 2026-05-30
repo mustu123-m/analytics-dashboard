@@ -2,12 +2,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { WS_URL } from '@/lib/api';
 
-export interface WSMessage {
-  type: string;
-  [key: string]: any;
-}
+export interface WSMessage { type: string; [key: string]: any; }
 
-export function useWebSocket() {
+export function useWebSocket(token?: string) {
   const ws = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
@@ -16,10 +13,10 @@ export function useWebSocket() {
   useEffect(() => {
     const connect = () => {
       try {
-        ws.current = new WebSocket(WS_URL);
-
+        // Pass token as query param for WS auth
+        const url = token ? `${WS_URL}?token=${token}` : WS_URL;
+        ws.current = new WebSocket(url);
         ws.current.onopen = () => setConnected(true);
-
         ws.current.onmessage = (e) => {
           try {
             const msg = JSON.parse(e.data) as WSMessage;
@@ -27,25 +24,13 @@ export function useWebSocket() {
             listeners.current.forEach(fn => fn(msg));
           } catch {}
         };
-
-        ws.current.onclose = () => {
-          setConnected(false);
-          setTimeout(connect, 3000); // auto-reconnect
-        };
-
-        ws.current.onerror = () => {
-          ws.current?.close();
-        };
-      } catch (err) {
-        setTimeout(connect, 3000);
-      }
+        ws.current.onclose = () => { setConnected(false); setTimeout(connect, 3000); };
+        ws.current.onerror = () => ws.current?.close();
+      } catch { setTimeout(connect, 3000); }
     };
-
     connect();
-    return () => {
-      ws.current?.close();
-    };
-  }, []);
+    return () => ws.current?.close();
+  }, [token]);
 
   const subscribe = useCallback((fn: (msg: WSMessage) => void) => {
     listeners.current.add(fn);

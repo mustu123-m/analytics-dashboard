@@ -1,69 +1,39 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const C = { credentials: 'include' as RequestInit['credentials'] };
+const J: RequestInit = { ...C, headers: { 'Content-Type': 'application/json' } };
 
-export async function uploadFile(file: File, onProgress?: (p: number) => void) {
+const check = async (res: Response) => {
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Request failed'); }
+  return res.json();
+};
+
+// Upload
+export const uploadFile = async (file: File) => {
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${BASE}/api/upload`, { method: 'POST', body: form });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-  return res.json();
-}
+  return check(await fetch(`${BASE}/api/upload`, { method: 'POST', ...C, body: form }));
+};
+export const listDatasets = async () => check(await fetch(`${BASE}/api/upload`, C));
+export const getDataset = async (id: string) => check(await fetch(`${BASE}/api/upload/${id}`, C));
+export const deleteDataset = async (id: string) => check(await fetch(`${BASE}/api/upload/${id}`, { method: 'DELETE', ...C }));
 
-export async function listDatasets() {
-  const res = await fetch(`${BASE}/api/upload`);
-  if (!res.ok) throw new Error('Failed to list datasets');
-  return res.json();
-}
+// Analytics
+export const getKPIs = async (id: string) => check(await fetch(`${BASE}/api/analytics/${id}/kpis`, C));
+export const getChartData = async (id: string, col: string) => check(await fetch(`${BASE}/api/analytics/${id}/chart/${encodeURIComponent(col)}`, C));
+export const getScatterData = async (id: string, x: string, y: string) => check(await fetch(`${BASE}/api/analytics/${id}/scatter?x=${encodeURIComponent(x)}&y=${encodeURIComponent(y)}`, C));
+export const getCorrelation = async (id: string) => check(await fetch(`${BASE}/api/analytics/${id}/correlation`, C));
 
-export async function getDataset(fileId: string) {
-  const res = await fetch(`${BASE}/api/upload/${fileId}`);
-  if (!res.ok) throw new Error('Dataset not found');
-  return res.json();
-}
+// AI
+export const getAIInsights = async (id: string) => check(await fetch(`${BASE}/api/ai/insights/${id}`, { method: 'POST', ...C }));
+export const chatWithData = async (id: string, message: string, history: any[]) =>
+  check(await fetch(`${BASE}/api/ai/chat/${id}`, { method: 'POST', ...J, body: JSON.stringify({ message, history }) }));
 
-export async function deleteDataset(fileId: string) {
-  const res = await fetch(`${BASE}/api/upload/${fileId}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error('Failed to delete');
-  return res.json();
-}
-
-export async function getKPIs(fileId: string) {
-  const res = await fetch(`${BASE}/api/analytics/${fileId}/kpis`);
-  if (!res.ok) throw new Error('Failed to get KPIs');
-  return res.json();
-}
-
-export async function getChartData(fileId: string, columnName: string) {
-  const res = await fetch(`${BASE}/api/analytics/${fileId}/chart/${encodeURIComponent(columnName)}`);
-  if (!res.ok) throw new Error('Failed to get chart data');
-  return res.json();
-}
-
-export async function getScatterData(fileId: string, x: string, y: string) {
-  const res = await fetch(`${BASE}/api/analytics/${fileId}/scatter?x=${encodeURIComponent(x)}&y=${encodeURIComponent(y)}`);
-  if (!res.ok) throw new Error('Failed to get scatter data');
-  return res.json();
-}
-
-export async function getCorrelation(fileId: string) {
-  const res = await fetch(`${BASE}/api/analytics/${fileId}/correlation`);
-  if (!res.ok) throw new Error('Failed to get correlation');
-  return res.json();
-}
-
-export async function getAIInsights(fileId: string) {
-  const res = await fetch(`${BASE}/api/ai/insights/${fileId}`, { method: 'POST' });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-  return res.json();
-}
-
-export async function chatWithData(fileId: string, message: string, history: any[]) {
-  const res = await fetch(`${BASE}/api/ai/chat/${fileId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, history }),
-  });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-  return res.json();
-}
+// Auth
+export const login = async (email: string, password: string) =>
+  check(await fetch(`${BASE}/api/auth/login`, { method: 'POST', ...J, body: JSON.stringify({ email, password }) }));
+export const register = async (name: string, email: string, password: string) =>
+  check(await fetch(`${BASE}/api/auth/register`, { method: 'POST', ...J, body: JSON.stringify({ name, email, password }) }));
+export const logout = async () => fetch(`${BASE}/api/auth/logout`, { method: 'POST', ...C });
+export const getMe = async () => check(await fetch(`${BASE}/api/auth/me`, C));
 
 export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000/ws';
