@@ -1,39 +1,29 @@
-// Simple file-based persistence so users survive server restarts on Render
-// In production swap this for PostgreSQL/MongoDB
-const fs = require('fs');
-const path = require('path');
+const pool = require('./db');
 
-const STORE_PATH = path.join(__dirname, '../data/users.json');
-
-// Ensure data dir exists
-const dataDir = path.join(__dirname, '../data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
-// Load existing users from disk into a Map
-const loadUsers = () => {
-  try {
-    if (fs.existsSync(STORE_PATH)) {
-      const raw = fs.readFileSync(STORE_PATH, 'utf8');
-      const arr = JSON.parse(raw);
-      const map = new Map();
-      arr.forEach(u => map.set(u.email, u));
-      return map;
-    }
-  } catch (e) {
-    console.error('Failed to load users from disk:', e.message);
-  }
-  return new Map();
+const findByEmail = async (email) => {
+  const { rows } = await pool.query(
+    'SELECT * FROM users WHERE email = $1',
+    [email.toLowerCase()]
+  );
+  return rows[0] || null;
 };
 
-const users = loadUsers();
-
-// Persist to disk on every write
-const saveUsers = () => {
-  try {
-    fs.writeFileSync(STORE_PATH, JSON.stringify([...users.values()], null, 2));
-  } catch (e) {
-    console.error('Failed to save users to disk:', e.message);
-  }
+const findById = async (id) => {
+  const { rows } = await pool.query(
+    'SELECT * FROM users WHERE id = $1',
+    [id]
+  );
+  return rows[0] || null;
 };
 
-module.exports = { users, saveUsers };
+const createUser = async ({ id, name, email, password, role }) => {
+  const { rows } = await pool.query(
+    `INSERT INTO users (id, name, email, password, role)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, name, email, role, created_at`,
+    [id, name, email.toLowerCase(), password, role]
+  );
+  return rows[0];
+};
+
+module.exports = { findByEmail, findById, createUser };

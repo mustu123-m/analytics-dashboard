@@ -1,24 +1,53 @@
 const express = require('express');
 const { GoogleGenAI } = require('@google/genai');
-const { dataStore } = require('./upload');
+const pool = require('../utils/db');
 
 const router = express.Router();
+const MODEL = 'gemini-2.0-flash';
 
 const getGenAI = () => {
   if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not set in .env');
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 };
 
-const MODEL = 'gemini-2.5-flash';
+const getDataset = async (fileId, userId) => {
+  const { rows } = await pool.query(
+    `SELECT d.file_name, d.columns_meta, d.summary, dr.rows
+     FROM datasets d
+     JOIN dataset_rows dr ON d.file_id = dr.file_id
+     WHERE d.file_id = $1 AND d.user_id = $2`,
+    [fileId, userId]
+  );
+  if (!rows[0]) return null;
+  return {
+    fileName: rows[0].file_name,
+    columns: rows[0].columns_meta,
+    summary: rows[0].summary,
+    data: rows[0].rows,
+  };
+};
 
 // POST /api/ai/insights/:fileId
 router.post('/insights/:fileId', async (req, res) => {
-  const dataset = dataStore.get(req.params.fileId);
-  if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
-
   try {
-    const ai = getGenAI();
-    const { columns, summary, data } = dataset;
+    // Check cache first
+    const cached = await pool.query(
+      'SELECT insights, generated_at FROM ai_insights WHERE file_id = $1',
+      [req.params.fileId]
+    );
+    if (cached.rows[0]) {
+      return res.json({
+        success: true,
+        insights: cached.rows[0].insights,
+        generatedAt: cached.rows[0].generated_at,
+        fromCache: true,
+      });
+    }
+
+    const dataset = await getDataset(req.params.fileId, req.user.id);
+    if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+
+    const { columns, summary, data, fileName } = dataset;
 
     const numericStats = columns
       .filter(c => c.type === 'number')
@@ -33,7 +62,7 @@ router.post('/insights/:fileId', async (req, res) => {
 
     const prompt = `You are a senior data analyst. Analyze this dataset and respond with a JSON object ONLY (no markdown, no backticks, no extra text).
 
-Dataset: "${dataset.fileName}"
+Dataset: "${fileName}"
 Rows: ${summary.totalRows}, Columns: ${summary.totalColumns}, Completeness: ${summary.completeness}%
 
 Numeric columns:
@@ -54,15 +83,20 @@ JSON schema to return:
   "predictiveOpportunities": "1-2 sentences on ML/forecasting use cases"
 }`;
 
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-    });
-
+    const ai = getGenAI();
+    const response = await ai.models.generateContent({ model: MODEL, contents: prompt });
     const text = response.text.replace(/```json|```/g, '').trim();
     const insights = JSON.parse(text);
 
-    res.json({ success: true, insights, generatedAt: new Date().toISOString() });
+    // Cache in DB
+    await pool.query(
+      `INSERT INTO ai_insights (file_id, insights)
+       VALUES ($1, $2)
+       ON CONFLICT (file_id) DO UPDATE SET insights = $2, generated_at = NOW()`,
+      [req.params.fileId, JSON.stringify(insights)]
+    );
+
+    res.json({ success: true, insights, generatedAt: new Date().toISOString(), fromCache: false });
   } catch (err) {
     console.error('AI insights error:', err.message);
     res.status(500).json({ error: err.message });
@@ -71,19 +105,18 @@ JSON schema to return:
 
 // POST /api/ai/chat/:fileId
 router.post('/chat/:fileId', async (req, res) => {
-  const dataset = dataStore.get(req.params.fileId);
-  if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
-
   const { message, history = [] } = req.body;
   if (!message) return res.status(400).json({ error: 'Message is required' });
 
   try {
-    const ai = getGenAI();
-    const { columns, summary, data } = dataset;
+    const dataset = await getDataset(req.params.fileId, req.user.id);
+    if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+
+    const { columns, summary, data, fileName } = dataset;
 
     const systemInstruction = `You are an expert data analyst helping users understand their dataset.
 
-Dataset: "${dataset.fileName}"
+Dataset: "${fileName}"
 Rows: ${summary.totalRows}, Columns: ${summary.totalColumns}, Completeness: ${summary.completeness}%
 
 Columns:
@@ -93,18 +126,13 @@ Sample rows: ${JSON.stringify(data.slice(0, 10))}
 
 Be concise, precise, and data-driven.`;
 
-    // Build conversation history in Gemini format
     const geminiHistory = history.slice(-8).map(h => ({
       role: h.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: h.content }],
     }));
 
-    const chat = ai.chats.create({
-      model: MODEL,
-      config: { systemInstruction },
-      history: geminiHistory,
-    });
-
+    const ai = getGenAI();
+    const chat = ai.chats.create({ model: MODEL, config: { systemInstruction }, history: geminiHistory });
     const response = await chat.sendMessage({ message });
 
     res.json({ reply: response.text });

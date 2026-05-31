@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 
+const migrate = require('./utils/migrate');
 const uploadRoutes = require('./routes/upload');
 const analyticsRoutes = require('./routes/analytics');
 const aiRoutes = require('./routes/ai');
@@ -29,7 +30,6 @@ wss.on('connection', (ws, req) => {
   if (token) {
     try { userId = jwt.verify(token, process.env.JWT_SECRET).userId; } catch {}
   }
-
   const clientId = Date.now().toString();
   clients.set(clientId, { ws, userId });
   ws.send(JSON.stringify({ type: 'connected', clientId }));
@@ -44,17 +44,11 @@ app.locals.broadcast = (data) => {
   });
 };
 
-// CORS — allow both local dev and Vercel production
-const allowedOrigins = [
-  'http://localhost:3000',
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
+// CORS
+const allowedOrigins = ['http://localhost:3000', process.env.FRONTEND_URL].filter(Boolean);
 app.use(cors({
   origin: (origin, cb) => {
-    // Allow requests with no origin (curl, Postman, mobile)
-    if (!origin) return cb(null, true);
-    if (allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
@@ -85,8 +79,17 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🔌 WebSocket at ws://localhost:${PORT}/ws`);
-  console.log(`✅ Allowed origins:`, allowedOrigins);
-});
+
+// Run DB migrations then start server
+migrate()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🔌 WebSocket at ws://localhost:${PORT}/ws`);
+      console.log(`✅ Allowed origins:`, allowedOrigins);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Failed to start server:', err.message);
+    process.exit(1);
+  });
