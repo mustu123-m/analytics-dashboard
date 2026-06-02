@@ -3,8 +3,8 @@
 A full-stack analytics platform to upload CSV/Excel datasets, visualize key metrics through interactive charts, and interact with AI-powered insights — with real-time updates and authenticated user accounts.
 
 ## Live Demo
-- **Frontend:** [your-app.vercel.app](analytics-dashboard-mu-black.vercel.app)
-- **Backend:** [your-app.onrender.com](https://analytics-dashboard-yqkw.onrender.com)
+- **Frontend:** [https://analytics-dashboard-mu-black.vercel.app]
+- **Backend:** [https://analytics-dashboard-yqkw.onrender.com]
 
 ---
 
