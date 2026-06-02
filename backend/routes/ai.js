@@ -3,7 +3,7 @@ const { GoogleGenAI } = require('@google/genai');
 const pool = require('../utils/db');
 
 const router = express.Router();
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-2.5-flash';
 
 const getGenAI = () => {
   if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not set in .env');
