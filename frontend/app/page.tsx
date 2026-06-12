@@ -5,7 +5,6 @@ import AuthPage from '@/components/AuthPage';
 import UploadZone from '@/components/UploadZone';
 import Dashboard from '@/components/Dashboard';
 import Sidebar from '@/components/Sidebar';
-import ActivityFeed from '@/components/ActivityFeed';
 import { useWebSocket } from '@/hooks/useWebSocket';
 
 export default function Home() {
@@ -17,8 +16,9 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+        <div className="flex gap-1">
+          {[0,1,2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ background: 'var(--blue)', animationDelay: `${i*0.2}s` }} />)}
+        </div>
       </div>
     );
   }
@@ -35,13 +35,12 @@ export default function Home() {
         activeView={view}
         user={user}
       />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 min-w-0">
         {view === 'upload'
           ? <UploadZone onDatasetLoaded={(ds) => { setActiveDataset(ds); setView('dashboard'); }} subscribe={subscribe} />
           : <Dashboard dataset={activeDataset} subscribe={subscribe} />
         }
       </main>
-      <ActivityFeed subscribe={subscribe} connected={connected} />
     </div>
   );
 }
