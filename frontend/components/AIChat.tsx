@@ -1,17 +1,15 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import { chatWithData } from '@/lib/api';
 
 interface Message { role: 'user' | 'assistant'; content: string; }
-
 interface Props { fileId: string; fileName: string; }
 
 const STARTERS = [
-  'What are the key trends in this dataset?',
+  'Summarize the key trends',
   'Which column has the most variance?',
-  'Are there any outliers I should know about?',
-  'What insights can you provide about the distribution?',
+  'Are there any outliers?',
+  'What should I investigate first?',
 ];
 
 export default function AIChat({ fileId, fileName }: Props) {
@@ -20,49 +18,44 @@ export default function AIChat({ fileId, fileName }: Props) {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
   const send = async (text: string) => {
     const userMsg = text || input.trim();
     if (!userMsg || loading) return;
     setInput('');
-    const newMessages: Message[] = [...messages, { role: 'user', content: userMsg }];
-    setMessages(newMessages);
+    const next: Message[] = [...messages, { role: 'user', content: userMsg }];
+    setMessages(next);
     setLoading(true);
     try {
       const { reply } = await chatWithData(fileId, userMsg, messages);
-      setMessages([...newMessages, { role: 'assistant', content: reply }]);
+      setMessages([...next, { role: 'assistant', content: reply }]);
     } catch (e: any) {
-      setMessages([...newMessages, { role: 'assistant', content: `Error: ${e.message}` }]);
+      setMessages([...next, { role: 'assistant', content: `Error: ${e.message}` }]);
     }
     setLoading(false);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-220px)] max-w-3xl rounded-2xl overflow-hidden"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <div className="max-w-2xl mx-auto flex flex-col rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 230px)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: 'var(--border)' }}>
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(99,102,241,0.15)' }}>
-          <Bot size={16} style={{ color: 'var(--accent)' }} />
-        </div>
-        <div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Ask about {fileName}</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Powered by GPT-4o Mini</p>
+      <div className="flex items-center justify-between px-4 py-2.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ background: 'var(--green)' }} />
+          <p className="text-xs mono" style={{ color: 'var(--muted)' }}>gemini-2.0-flash · {fileName}</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {messages.length === 0 && (
-          <div className="space-y-2">
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Suggested questions:</p>
+          <div className="space-y-1.5">
+            <p className="text-xs mono uppercase tracking-wider mb-2" style={{ color: 'var(--dim)' }}>Suggested</p>
             {STARTERS.map(s => (
               <button key={s} onClick={() => send(s)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left w-full transition-all hover:border-indigo-500"
-                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-                <Sparkles size={11} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+                className="block w-full text-left px-3 py-2 rounded-md text-sm transition-colors"
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--muted)' }}>
                 {s}
               </button>
             ))}
@@ -70,37 +63,22 @@ export default function AIChat({ fileId, fileName }: Props) {
         )}
 
         {messages.map((msg, i) => (
-          <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
-                style={{ background: 'rgba(99,102,241,0.15)' }}>
-                <Bot size={13} style={{ color: 'var(--accent)' }} />
-              </div>
-            )}
-            <div className="max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed"
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className="max-w-[85%] px-3.5 py-2.5 rounded-lg text-sm leading-relaxed"
               style={{
-                background: msg.role === 'user' ? 'var(--accent)' : 'var(--surface-2)',
-                color: 'var(--text)',
-                borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
+                background: msg.role === 'user' ? 'var(--blue)' : 'var(--surface-2)',
+                color: msg.role === 'user' ? '#08090d' : 'var(--text)',
+                border: msg.role === 'user' ? 'none' : '1px solid var(--border)',
               }}>
               {msg.content}
             </div>
-            {msg.role === 'user' && (
-              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
-                style={{ background: 'var(--surface-2)' }}>
-                <User size={13} style={{ color: 'var(--text-muted)' }} />
-              </div>
-            )}
           </div>
         ))}
 
         {loading && (
-          <div className="flex gap-3">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.15)' }}>
-              <Bot size={13} style={{ color: 'var(--accent)' }} />
-            </div>
-            <div className="px-4 py-3 rounded-2xl" style={{ background: 'var(--surface-2)', borderRadius: '4px 18px 18px 18px' }}>
-              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+          <div className="flex justify-start">
+            <div className="px-3.5 py-2.5 rounded-lg flex gap-1" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+              {[0,1,2].map(i => <span key={i} className="w-1 h-1 rounded-full pulse-dot" style={{ background: 'var(--dim)', animationDelay: `${i*0.15}s` }} />)}
             </div>
           </div>
         )}
@@ -108,20 +86,21 @@ export default function AIChat({ fileId, fileName }: Props) {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t" style={{ borderColor: 'var(--border)' }}>
+      <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid var(--border)' }}>
         <div className="flex gap-2">
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send('')}
-            placeholder="Ask anything about your data..."
-            className="flex-1 px-4 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+            onKeyDown={e => e.key === 'Enter' && send('')}
+            placeholder="Ask about this dataset…"
+            className="flex-1"
           />
           <button onClick={() => send('')} disabled={!input.trim() || loading}
-            className="p-2.5 rounded-xl transition-all hover:opacity-80 disabled:opacity-40"
-            style={{ background: 'var(--accent)' }}>
-            <Send size={16} color="white" />
+            className="px-3 rounded-md transition-opacity disabled:opacity-30"
+            style={{ background: 'var(--blue)', color: '#08090d' }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M2 8H14M14 8L9 3M14 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </div>
       </div>
