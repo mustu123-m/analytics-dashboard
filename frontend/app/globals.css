@@ -1,35 +1,99 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/dm-mono/400.css';
+@import '@fontsource/dm-mono/500.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #0a0a0f;
-  --surface: #111118;
-  --surface-2: #1a1a24;
-  --border: #1e1e2e;
-  --accent: #6366f1;
-  --accent-2: #8b5cf6;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --text: #e2e8f0;
-  --text-muted: #64748b;
-  --text-dim: #334155;
+  --bg:        #08090d;
+  --surface:   #0f1117;
+  --surface-2: #161b22;
+  --surface-3: #1c2128;
+  --border:    #21262d;
+  --border-2:  #30363d;
+
+  --text:      #e6edf3;
+  --muted:     #8b949e;
+  --dim:       #484f58;
+
+  --blue:      #58a6ff;
+  --blue-bg:   rgba(88,166,255,0.08);
+  --blue-border:rgba(88,166,255,0.2);
+  --green:     #3fb950;
+  --green-bg:  rgba(63,185,80,0.08);
+  --red:       #f78166;
+  --amber:     #d29922;
+  --purple:    #bc8cff;
+
+  --font-ui:   'Inter', system-ui, sans-serif;
+  --font-mono: 'DM Mono', 'Fira Code', monospace;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 14px; }
 
 body {
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--text);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--surface); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.mono { font-family: var(--font-mono); }
 
-.mono { font-family: 'JetBrains Mono', monospace; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+/* Focus */
+*:focus-visible { outline: 1px solid var(--blue); outline-offset: 2px; }
+
+/* Input base */
+input, textarea {
+  font-family: var(--font-ui);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+input::placeholder { color: var(--dim); }
+
+/* Ticker animation */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-track { animation: ticker 28s linear infinite; }
+.ticker-track:hover { animation-play-state: paused; }
+
+/* Fade in */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.25s ease both; }
+
+/* Pulse dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
+
+/* Chart tooltip */
+.recharts-tooltip-wrapper { outline: none !important; }
