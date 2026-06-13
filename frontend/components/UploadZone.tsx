@@ -1,6 +1,7 @@
 'use client';
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { motion, AnimatePresence } from 'framer-motion';
 import { uploadFile, listDatasets, getDataset, deleteDataset } from '@/lib/api';
 
 interface Props {
@@ -9,12 +10,16 @@ interface Props {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  uploading: 'Uploading',
+  uploading: 'Uploading file',
   parsing: 'Parsing dataset',
   processing: 'Computing column stats',
-  saving: 'Writing to database',
-  complete: 'Ready',
+  saving: 'Saving to database',
+  complete: 'Ready!',
   error: 'Failed',
+};
+
+const FILE_COLORS: Record<string, string> = {
+  CSV: '#2DD4A7', XLS: '#6D5EF5', XLSX: '#6D5EF5',
 };
 
 export default function UploadZone({ onDatasetLoaded, subscribe }: Props) {
@@ -91,137 +96,132 @@ export default function UploadZone({ onDatasetLoaded, subscribe }: Props) {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto" style={{ background: 'var(--bg)' }}>
       <div className="max-w-3xl mx-auto px-6 py-10">
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs mono px-1.5 py-0.5 rounded" style={{ background: 'var(--surface-2)', color: 'var(--dim)' }}>01</span>
-            <p className="text-xs mono uppercase tracking-wider" style={{ color: 'var(--dim)' }}>Data ingestion</p>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3" style={{ background: 'var(--grad-soft)' }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--indigo)' }} />
+            <span className="text-xs font-semibold grad-text">Step 1 of 2</span>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight mb-1.5">Upload a dataset</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight mb-1.5">Upload your dataset</h1>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>
-            CSV or Excel, up to 10MB. Columns are typed automatically — numeric, categorical, or date.
+            Drop a CSV or Excel file — we'll detect column types, compute stats, and generate AI insights automatically.
           </p>
-        </div>
+        </motion.div>
 
         {/* Drop zone */}
         <div {...getRootProps()}
-          className="relative rounded-lg p-10 mb-8 transition-colors"
+          className="relative rounded-3xl p-12 mb-10 transition-all cursor-pointer overflow-hidden hover:scale-[1.005]"
           style={{
-            border: `1px solid ${isDragActive ? 'var(--blue)' : error ? 'var(--red)' : 'var(--border)'}`,
-            background: isDragActive ? 'var(--blue-bg)' : 'var(--surface)',
+            border: `2px dashed ${isDragActive ? 'var(--indigo)' : error ? 'var(--red)' : 'var(--border-2)'}`,
+            background: isDragActive ? 'var(--grad-soft)' : 'var(--surface)',
             cursor: uploading ? 'default' : 'pointer',
           }}>
           <input {...getInputProps()} />
 
-          {/* corner brackets */}
-          {!uploading && (
-            <>
-              <Corner pos="tl" /><Corner pos="tr" /><Corner pos="bl" /><Corner pos="br" />
-            </>
-          )}
-
-          <div className="flex flex-col items-center text-center gap-3 relative z-10">
+          <AnimatePresence mode="wait">
             {uploading ? (
-              <div className="w-full max-w-xs">
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-xs mono" style={{ color: 'var(--muted)' }}>
-                    {STATUS_LABELS[status] || 'Working'}
-                  </span>
-                  <span className="text-xs mono" style={{ color: 'var(--blue)' }}>{progress}%</span>
-                </div>
-                <div className="w-full rounded-full h-1" style={{ background: 'var(--border)' }}>
-                  <div className="h-1 rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: 'var(--blue)' }} />
-                </div>
-              </div>
-            ) : error ? (
-              <>
-                <div className="w-9 h-9 rounded-md flex items-center justify-center" style={{ background: 'rgba(247,129,102,0.1)', border: '1px solid rgba(247,129,102,0.3)' }}>
-                  <span className="mono text-sm" style={{ color: 'var(--red)' }}>!</span>
-                </div>
-                <p className="text-sm font-medium" style={{ color: 'var(--red)' }}>{error}</p>
-                <p className="text-xs" style={{ color: 'var(--dim)' }}>Click anywhere to retry</p>
-              </>
-            ) : (
-              <>
-                <div className="w-9 h-9 rounded-md flex items-center justify-center" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 11V3M8 3L5 6M8 3L11 6M3 13H13" stroke={isDragActive ? 'var(--blue)' : 'var(--muted)'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              <motion.div key="uploading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center text-center gap-4">
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border)" strokeWidth="5" />
+                    <motion.circle cx="32" cy="32" r="28" fill="none" stroke="var(--indigo)" strokeWidth="5" strokeLinecap="round"
+                      strokeDasharray={2 * Math.PI * 28}
+                      animate={{ strokeDashoffset: 2 * Math.PI * 28 * (1 - progress / 100) }}
+                      transition={{ duration: 0.4 }} />
                   </svg>
+                  <div className="absolute inset-0 flex items-center justify-center text-sm font-bold mono">{progress}%</div>
                 </div>
+                <p className="text-sm font-semibold">{STATUS_LABELS[status] || 'Working…'}</p>
+              </motion.div>
+            ) : error ? (
+              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center text-center gap-3">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,107,107,0.1)' }}>
+                  <span className="text-xl">⚠</span>
+                </div>
+                <p className="text-sm font-semibold" style={{ color: 'var(--red)' }}>{error}</p>
+                <p className="text-xs" style={{ color: 'var(--dim)' }}>Click anywhere to try again</p>
+              </motion.div>
+            ) : (
+              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center text-center gap-4">
+                <motion.div animate={{ y: isDragActive ? -6 : 0 }} className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--grad-soft)' }}>
+                  <svg width="22" height="22" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 11V3M8 3L5 6M8 3L11 6M3 13H13" stroke="var(--indigo)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </motion.div>
                 <div>
-                  <p className="text-sm font-medium mb-0.5">{isDragActive ? 'Drop to upload' : 'Drag a file here'}</p>
-                  <p className="text-xs" style={{ color: 'var(--dim)' }}>or click to browse</p>
+                  <p className="text-base font-bold mb-1">{isDragActive ? 'Drop it here!' : 'Drag & drop your file'}</p>
+                  <p className="text-sm" style={{ color: 'var(--muted)' }}>or <span className="grad-text font-semibold">browse</span> from your computer</p>
                 </div>
-                <div className="flex gap-1.5 mt-1">
-                  {['.csv', '.xlsx', '.xls'].map(ext => (
-                    <span key={ext} className="text-xs mono px-2 py-0.5 rounded" style={{ background: 'var(--surface-2)', color: 'var(--dim)', border: '1px solid var(--border)' }}>{ext}</span>
+                <div className="flex gap-2 mt-1">
+                  {['CSV', 'XLSX', 'XLS'].map(ext => (
+                    <span key={ext} className="text-xs font-bold mono px-2.5 py-1 rounded-lg" style={{ background: 'var(--surface-2)', color: FILE_COLORS[ext] || 'var(--muted)' }}>{ext}</span>
                   ))}
                 </div>
-              </>
+                <p className="text-xs" style={{ color: 'var(--dim)' }}>Max 10MB</p>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
 
         {/* Recent datasets */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs mono uppercase tracking-wider" style={{ color: 'var(--dim)' }}>Recent datasets</p>
-            {datasets.length > 0 && <p className="text-xs mono" style={{ color: 'var(--dim)' }}>{datasets.length}</p>}
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-bold">Recent uploads</p>
+            {datasets.length > 0 && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--surface-2)', color: 'var(--muted)' }}>{datasets.length}</span>
+            )}
           </div>
 
           {loadingList ? (
-            <div className="space-y-2">
-              {[1,2].map(i => <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: 'var(--surface)' }} />)}
+            <div className="space-y-2.5">
+              {[1,2].map(i => <div key={i} className="h-[68px] rounded-2xl skeleton" />)}
             </div>
           ) : datasets.length === 0 ? (
-            <div className="rounded-lg p-6 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-              <p className="text-sm" style={{ color: 'var(--dim)' }}>No datasets yet — upload one to get started</p>
+            <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <p className="text-sm" style={{ color: 'var(--dim)' }}>No datasets yet — upload one above to get started ✨</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {datasets.map(ds => (
-                <div key={ds.fileId}
-                  className="flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-colors group"
-                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-                  onClick={() => getDataset(ds.fileId).then(onDatasetLoaded).catch(() => {})}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                      <span className="text-xs mono" style={{ color: 'var(--muted)' }}>{ds.fileName?.split('.').pop()?.toUpperCase().slice(0,3)}</span>
+            <div className="space-y-2.5">
+              {datasets.map((ds, i) => {
+                const ext = ds.fileName?.split('.').pop()?.toUpperCase() || '';
+                return (
+                  <motion.div key={ds.fileId}
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                    whileHover={{ scale: 1.01 }}
+                    className="flex items-center justify-between px-5 py-4 rounded-2xl cursor-pointer transition-shadow lift group"
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+                    onClick={() => getDataset(ds.fileId).then(onDatasetLoaded).catch(() => {})}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-2)' }}>
+                        <span className="text-xs font-bold mono" style={{ color: FILE_COLORS[ext] || 'var(--muted)' }}>{ext.slice(0,4)}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate">{ds.fileName}</p>
+                        <p className="text-xs mono" style={{ color: 'var(--dim)' }}>
+                          {ds.rowCount?.toLocaleString()} rows · {ds.columnCount} cols
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{ds.fileName}</p>
-                      <p className="text-xs mono" style={{ color: 'var(--dim)' }}>
-                        {ds.rowCount?.toLocaleString()} rows · {ds.columnCount} cols
-                      </p>
-                    </div>
-                  </div>
-                  <button onClick={(e) => handleDelete(ds.fileId, e)}
-                    className="w-7 h-7 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                    style={{ color: 'var(--dim)' }}>
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                      <path d="M3 4H13M6 4V2.5C6 2.2 6.2 2 6.5 2H9.5C9.8 2 10 2.2 10 2.5V4M12 4V13C12 13.5 11.5 14 11 14H5C4.5 14 4 13.5 4 13V4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-              ))}
+                    <button onClick={(e) => handleDelete(ds.fileId, e)}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                      style={{ background: 'var(--surface-2)', color: 'var(--red)' }}>
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                        <path d="M3 4H13M6 4V2.5C6 2.2 6.2 2 6.5 2H9.5C9.8 2 10 2.2 10 2.5V4M12 4V13C12 13.5 11.5 14 11 14H5C4.5 14 4 13.5 4 13V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
     </div>
   );
-}
-
-function Corner({ pos }: { pos: 'tl'|'tr'|'bl'|'br' }) {
-  const styles: Record<string, string> = {
-    tl: 'top-2 left-2 border-t border-l',
-    tr: 'top-2 right-2 border-t border-r',
-    bl: 'bottom-2 left-2 border-b border-l',
-    br: 'bottom-2 right-2 border-b border-r',
-  };
-  return <div className={`absolute w-2.5 h-2.5 ${styles[pos]}`} style={{ borderColor: 'var(--border-2)' }} />;
 }
