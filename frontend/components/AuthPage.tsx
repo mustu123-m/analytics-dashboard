@@ -30,37 +30,44 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4" style={{ background: 'var(--bg)' }}>
-      <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full blob"
-        style={{ background: 'radial-gradient(circle, var(--indigo) 0%, transparent 70%)', opacity: 0.35 }} />
-      <div className="absolute top-1/3 -right-40 w-[420px] h-[420px] rounded-full blob blob-2"
-        style={{ background: 'radial-gradient(circle, var(--pink) 0%, transparent 70%)', opacity: 0.3 }} />
-      <div className="absolute -bottom-40 left-1/4 w-[400px] h-[400px] rounded-full blob blob-3"
-        style={{ background: 'radial-gradient(circle, var(--amber) 0%, transparent 70%)', opacity: 0.2 }} />
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8" style={{ background: 'var(--bg)' }}>
+      {/* Aurora mesh */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full aurora" style={{ background: 'var(--cyan)', opacity: 0.18 }} />
+        <div className="absolute top-[20%] right-[-15%] w-[550px] h-[550px] rounded-full aurora aurora-2" style={{ background: 'var(--violet)', opacity: 0.16 }} />
+        <div className="absolute bottom-[-25%] left-[20%] w-[500px] h-[500px] rounded-full aurora aurora-3" style={{ background: 'var(--coral)', opacity: 0.14 }} />
+      </div>
+      {/* Grain overlay */}
+      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23n)\' opacity=\'0.4\'/%3E%3C/svg%3E")' }} />
 
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 w-full max-w-md rounded-3xl p-8 sm:p-10"
-        style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: 'var(--shadow-lg)' }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-md rounded-[28px] p-8 sm:p-10 glass"
+        style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}
       >
-        <div className="flex items-center gap-2.5 mb-8">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'var(--grad)' }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 12L5.5 6L9 9L14 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        {/* Logo */}
+        <div className="flex items-center gap-3 mb-9">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center relative" style={{ background: 'var(--grad-1)' }}>
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+              <path d="M2 12L5.5 6L9 9L14 2" stroke="#05060A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
+            <div className="absolute inset-0 rounded-2xl" style={{ background: 'var(--grad-1)', filter: 'blur(16px)', opacity: 0.6, zIndex: -1 }} />
           </div>
-          <span className="text-base font-bold tracking-tight">DataPulse</span>
+          <div>
+            <p className="text-base font-bold tracking-tight">DataPulse</p>
+            <p className="text-xs mono" style={{ color: 'var(--dim)' }}>analytics OS</p>
+          </div>
         </div>
 
         <AnimatePresence mode="wait">
-          <motion.div key={mode} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.2 }}>
-            <h1 className="text-2xl font-extrabold tracking-tight mb-1.5">
-              {mode === 'login' ? 'Welcome back' : 'Get started free'}
+          <motion.div key={mode} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">
+              {mode === 'login' ? 'Welcome back' : 'Create account'}
             </h1>
-            <p className="text-sm mb-7" style={{ color: 'var(--muted)' }}>
-              {mode === 'login' ? 'Sign in to access your dashboards' : 'Upload data, get AI insights in seconds'}
+            <p className="text-sm mb-8" style={{ color: 'var(--muted)' }}>
+              {mode === 'login' ? 'Sign in to continue to your dashboards' : 'Start exploring your data with AI'}
             </p>
           </motion.div>
         </AnimatePresence>
@@ -79,28 +86,28 @@ export default function AuthPage() {
           <AnimatePresence>
             {error && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                className="px-3.5 py-2.5 rounded-xl text-sm" style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', color: '#E64545' }}>
+                className="px-4 py-3 rounded-2xl text-sm" style={{ background: 'rgba(255,111,156,0.08)', border: '1px solid rgba(255,111,156,0.2)', color: 'var(--coral)' }}>
                 {error}
               </motion.div>
             )}
           </AnimatePresence>
 
-          <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={loading}
-            className="w-full py-3.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-60 mt-1"
-            style={{ background: 'var(--grad)', color: 'white', boxShadow: 'var(--shadow-glow)' }}>
+          <motion.button whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.01 }} type="submit" disabled={loading}
+            className="w-full py-3.5 rounded-2xl text-sm font-bold transition-opacity disabled:opacity-60 mt-1 relative overflow-hidden"
+            style={{ background: 'var(--grad-1)', color: '#05060A' }}>
             {loading ? (
               <span className="flex items-center justify-center gap-1.5">
-                {[0,1,2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full bg-white pulse-dot" style={{ animationDelay: `${i*0.15}s` }} />)}
+                {[0,1,2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full bg-current pulse-dot" style={{ animationDelay: `${i*0.15}s` }} />)}
               </span>
             ) : mode === 'login' ? 'Sign in' : 'Create account'}
           </motion.button>
         </form>
 
-        <div className="mt-7 pt-6 text-center" style={{ borderTop: '1px solid var(--border)' }}>
+        <div className="mt-7 pt-6 text-center" style={{ borderTop: '1px solid var(--glass-br)' }}>
           <button onClick={() => { setMode(m => m === 'login' ? 'register' : 'login'); setError(''); }}
             className="text-sm font-medium" style={{ color: 'var(--muted)' }}>
             {mode === 'login' ? "New here? " : 'Already have an account? '}
-            <span className="grad-text font-bold">{mode === 'login' ? 'Create an account' : 'Sign in'}</span>
+            <span className="grad-text-1 font-bold">{mode === 'login' ? 'Create an account' : 'Sign in'}</span>
           </button>
         </div>
       </motion.div>
@@ -111,7 +118,7 @@ export default function AuthPage() {
 function Field({ label, ...props }: any) {
   return (
     <div>
-      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text)' }}>{label}</label>
+      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted)' }}>{label}</label>
       <input {...props} />
     </div>
   );
