@@ -1,15 +1,16 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { chatWithData } from '@/lib/api';
 
 interface Message { role: 'user' | 'assistant'; content: string; }
 interface Props { fileId: string; fileName: string; }
 
 const STARTERS = [
-  'Summarize the key trends',
-  'Which column has the most variance?',
-  'Are there any outliers?',
-  'What should I investigate first?',
+  { text: 'Summarize the key trends', emoji: '📈' },
+  { text: 'Which column has the most variance?', emoji: '📊' },
+  { text: 'Are there any outliers?', emoji: '🔍' },
+  { text: 'What should I investigate first?', emoji: '🧭' },
 ];
 
 export default function AIChat({ fileId, fileName }: Props) {
@@ -37,48 +38,53 @@ export default function AIChat({ fileId, fileName }: Props) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 230px)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <div className="max-w-2xl mx-auto flex flex-col rounded-3xl overflow-hidden" style={{ height: 'calc(100vh - 280px)', minHeight: 400, background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ background: 'var(--green)' }} />
-          <p className="text-xs mono" style={{ color: 'var(--muted)' }}>gemini-2.0-flash · {fileName}</p>
+      <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0" style={{ background: 'var(--grad-soft)' }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{ background: 'var(--grad)' }}>🤖</div>
+        <div>
+          <p className="text-sm font-bold">AI Analyst</p>
+          <p className="text-xs" style={{ color: 'var(--muted)' }}>Gemini 2.0 Flash · {fileName}</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
         {messages.length === 0 && (
-          <div className="space-y-1.5">
-            <p className="text-xs mono uppercase tracking-wider mb-2" style={{ color: 'var(--dim)' }}>Suggested</p>
-            {STARTERS.map(s => (
-              <button key={s} onClick={() => send(s)}
-                className="block w-full text-left px-3 py-2 rounded-md text-sm transition-colors"
-                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--muted)' }}>
-                {s}
-              </button>
-            ))}
+          <div className="space-y-2">
+            <p className="text-xs font-bold mb-2" style={{ color: 'var(--dim)' }}>TRY ASKING</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {STARTERS.map(s => (
+                <motion.button key={s.text} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => send(s.text)}
+                  className="text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors flex items-start gap-2"
+                  style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                  <span>{s.emoji}</span><span>{s.text}</span>
+                </motion.button>
+              ))}
+            </div>
           </div>
         )}
 
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className="max-w-[85%] px-3.5 py-2.5 rounded-lg text-sm leading-relaxed"
+          <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className="max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed font-medium"
               style={{
-                background: msg.role === 'user' ? 'var(--blue)' : 'var(--surface-2)',
-                color: msg.role === 'user' ? '#08090d' : 'var(--text)',
-                border: msg.role === 'user' ? 'none' : '1px solid var(--border)',
+                background: msg.role === 'user' ? 'var(--grad)' : 'var(--surface-2)',
+                color: msg.role === 'user' ? 'white' : 'var(--text)',
               }}>
               {msg.content}
             </div>
-          </div>
+          </motion.div>
         ))}
 
         {loading && (
           <div className="flex justify-start">
-            <div className="px-3.5 py-2.5 rounded-lg flex gap-1" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-              {[0,1,2].map(i => <span key={i} className="w-1 h-1 rounded-full pulse-dot" style={{ background: 'var(--dim)', animationDelay: `${i*0.15}s` }} />)}
+            <div className="px-4 py-3 rounded-2xl flex gap-1.5" style={{ background: 'var(--surface-2)' }}>
+              {[0,1,2].map(i => (
+                <motion.span key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--indigo)' }}
+                  animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.12 }} />
+              ))}
             </div>
           </div>
         )}
@@ -95,13 +101,13 @@ export default function AIChat({ fileId, fileName }: Props) {
             placeholder="Ask about this dataset…"
             className="flex-1"
           />
-          <button onClick={() => send('')} disabled={!input.trim() || loading}
-            className="px-3 rounded-md transition-opacity disabled:opacity-30"
-            style={{ background: 'var(--blue)', color: '#08090d' }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M2 8H14M14 8L9 3M14 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <motion.button whileTap={{ scale: 0.92 }} onClick={() => send('')} disabled={!input.trim() || loading}
+            className="w-11 h-11 rounded-xl flex items-center justify-center transition-opacity disabled:opacity-30 flex-shrink-0"
+            style={{ background: 'var(--grad)' }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 8H14M14 8L9 3M14 8L9 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-          </button>
+          </motion.button>
         </div>
       </div>
     </div>
