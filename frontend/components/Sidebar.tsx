@@ -1,4 +1,5 @@
 'use client';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/AuthContext';
 
 interface Props {
@@ -11,19 +12,14 @@ interface Props {
 }
 
 const Icon = {
-  upload: (
-    <path d="M8 11V3M8 3L5 6M8 3L11 6M3 13H13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-  ),
+  upload: <path d="M8 11V3M8 3L5 6M8 3L11 6M3 13H13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>,
   grid: (
-    <g stroke="currentColor" strokeWidth="1.4" fill="none">
-      <rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/>
-      <rect x="9" y="2.5" width="4.5" height="7" rx="1"/>
-      <rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/>
+    <g stroke="currentColor" strokeWidth="1.6" fill="none">
+      <rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1.2"/>
+      <rect x="9" y="2.5" width="4.5" height="7" rx="1.2"/>
+      <rect x="2.5" y="9" width="4.5" height="4.5" rx="1.2"/>
       <rect x="9" y="11.5" width="4.5" height="2" rx="1"/>
     </g>
-  ),
-  brain: (
-    <path d="M5.5 2.5C4 2.5 3 3.5 3 5C2 5.3 1.5 6.2 1.5 7C1.5 8 2.3 8.8 3 9C3 10.5 4 11.5 5.5 11.5M5.5 2.5C6.5 2.5 7 3 7 4V10C7 11 6.5 11.5 5.5 11.5M5.5 2.5V11.5M10.5 2.5C12 2.5 13 3.5 13 5C14 5.3 14.5 6.2 14.5 7C14.5 8 13.7 8.8 13 9C13 10.5 12 11.5 10.5 11.5M10.5 2.5C9.5 2.5 9 3 9 4V10C9 11 9.5 11.5 10.5 11.5M10.5 2.5V11.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
   ),
 };
 
@@ -32,39 +28,36 @@ export default function Sidebar({ connected, onUploadClick, onDashboardClick, ha
   const initial = user.name?.[0]?.toUpperCase() || '?';
 
   return (
-    <aside className="w-[60px] flex flex-col items-center py-4 flex-shrink-0"
+    <aside className="w-[76px] flex flex-col items-center py-5 flex-shrink-0 relative z-20"
       style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
 
-      {/* Logo */}
-      <div className="w-8 h-8 rounded-md flex items-center justify-center mb-6" style={{ background: 'var(--blue)' }}>
-        <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
-          <path d="M2 9L4.5 5L7 7L10 2" stroke="#08090d" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      <motion.div whileHover={{ rotate: 8, scale: 1.05 }} className="w-10 h-10 rounded-2xl flex items-center justify-center mb-8 cursor-pointer"
+        style={{ background: 'var(--grad)', boxShadow: 'var(--shadow-glow)' }}>
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+          <path d="M2 12L5.5 6L9 9L14 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-      </div>
+      </motion.div>
 
-      {/* Nav */}
-      <nav className="flex flex-col gap-1.5">
+      <nav className="flex flex-col gap-2">
         <NavBtn icon={Icon.upload} label="Upload" active={activeView === 'upload'} onClick={onUploadClick} />
         <NavBtn icon={Icon.grid} label="Dashboard" active={activeView === 'dashboard'} onClick={onDashboardClick} disabled={!hasDataset} />
       </nav>
 
       <div className="flex-1" />
 
-      {/* Connection status */}
-      <div className="mb-4 group relative">
-        <div className="w-8 h-8 rounded-md flex items-center justify-center">
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: connected ? 'var(--green)' : 'var(--red)' }} />
+      <div className="mb-3 group relative">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center">
+          <span className="w-2 h-2 rounded-full" style={{ background: connected ? 'var(--green)' : 'var(--red)', boxShadow: connected ? '0 0 0 4px rgba(45,212,167,0.15)' : '0 0 0 4px rgba(255,107,107,0.15)' }} />
         </div>
-        <Tooltip text={connected ? 'Live connection' : 'Reconnecting…'} />
+        <Tooltip text={connected ? 'Live' : 'Reconnecting…'} />
       </div>
 
-      {/* User avatar + signout */}
       <div className="group relative">
-        <button onClick={signOut}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-xs font-semibold transition-colors mono"
-          style={{ background: 'var(--surface-2)', color: 'var(--muted)', border: '1px solid var(--border)' }}>
+        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={signOut}
+          className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold text-white"
+          style={{ background: 'var(--grad)' }}>
           {initial}
-        </button>
+        </motion.button>
         <Tooltip text={`${user.name} — sign out`} />
       </div>
     </aside>
@@ -74,16 +67,17 @@ export default function Sidebar({ connected, onUploadClick, onDashboardClick, ha
 function NavBtn({ icon, label, active, onClick, disabled }: any) {
   return (
     <div className="group relative">
-      <button onClick={onClick} disabled={disabled}
-        className="w-8 h-8 rounded-md flex items-center justify-center transition-colors"
+      <motion.button whileHover={!disabled ? { scale: 1.06 } : {}} whileTap={!disabled ? { scale: 0.94 } : {}}
+        onClick={onClick} disabled={disabled}
+        className="w-10 h-10 rounded-2xl flex items-center justify-center transition-colors relative"
         style={{
-          background: active ? 'var(--blue-bg)' : 'transparent',
-          color: active ? 'var(--blue)' : disabled ? 'var(--dim)' : 'var(--muted)',
+          background: active ? 'var(--grad-soft)' : 'transparent',
+          color: active ? 'var(--indigo)' : disabled ? 'var(--dim)' : 'var(--muted)',
           cursor: disabled ? 'not-allowed' : 'pointer',
-          border: active ? '1px solid var(--blue-border)' : '1px solid transparent',
         }}>
-        <svg width="16" height="16" viewBox="0 0 16 16">{icon}</svg>
-      </button>
+        <svg width="18" height="18" viewBox="0 0 16 16">{icon}</svg>
+        {active && <motion.div layoutId="nav-indicator" className="absolute -left-[14px] top-1/2 -translate-y-1/2 w-1 h-5 rounded-full" style={{ background: 'var(--grad)' }} />}
+      </motion.button>
       <Tooltip text={label} />
     </div>
   );
@@ -91,8 +85,8 @@ function NavBtn({ icon, label, active, onClick, disabled }: any) {
 
 function Tooltip({ text }: { text: string }) {
   return (
-    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-      style={{ background: 'var(--surface-3)', border: '1px solid var(--border-2)', color: 'var(--text)' }}>
+    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+      style={{ background: 'var(--text)', color: 'white', boxShadow: 'var(--shadow-md)' }}>
       {text}
     </div>
   );
