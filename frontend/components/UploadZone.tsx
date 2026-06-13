@@ -18,9 +18,7 @@ const STATUS_LABELS: Record<string, string> = {
   error: 'Failed',
 };
 
-const FILE_COLORS: Record<string, string> = {
-  CSV: '#2DD4A7', XLS: '#6D5EF5', XLSX: '#6D5EF5',
-};
+const FILE_GLOW: Record<string, string> = { CSV: 'var(--lime)', XLS: 'var(--violet)', XLSX: 'var(--violet)' };
 
 export default function UploadZone({ onDatasetLoaded, subscribe }: Props) {
   const [uploading, setUploading] = useState(false);
@@ -96,76 +94,79 @@ export default function UploadZone({ onDatasetLoaded, subscribe }: Props) {
   };
 
   return (
-    <div className="h-full overflow-y-auto" style={{ background: 'var(--bg)' }}>
-      <div className="max-w-3xl mx-auto px-6 py-10">
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3" style={{ background: 'var(--grad-soft)' }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--indigo)' }} />
-            <span className="text-xs font-semibold grad-text">Step 1 of 2</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-1.5">Upload your dataset</h1>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1.5">Upload your dataset</h1>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>
-            Drop a CSV or Excel file — we'll detect column types, compute stats, and generate AI insights automatically.
+            CSV or Excel files, up to 10MB. Columns are typed automatically.
           </p>
         </motion.div>
 
-        {/* Drop zone */}
-        <div {...getRootProps()}
-          className="relative rounded-3xl p-12 mb-10 transition-all cursor-pointer overflow-hidden hover:scale-[1.005]"
-          style={{
-            border: `2px dashed ${isDragActive ? 'var(--indigo)' : error ? 'var(--red)' : 'var(--border-2)'}`,
-            background: isDragActive ? 'var(--grad-soft)' : 'var(--surface)',
-            cursor: uploading ? 'default' : 'pointer',
-          }}>
-          <input {...getInputProps()} />
+        {/* Bento grid: dropzone + format cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+          <div {...getRootProps()}
+            className="sm:col-span-2 relative rounded-3xl p-8 sm:p-12 transition-smooth cursor-pointer overflow-hidden glass hover:scale-[1.005]"
+            style={{
+              borderColor: isDragActive ? 'var(--cyan)' : error ? 'var(--coral)' : 'var(--glass-br)',
+              boxShadow: isDragActive ? '0 0 40px rgba(46,230,214,0.15)' : 'none',
+              cursor: uploading ? 'default' : 'pointer',
+            }}>
+            <input {...getInputProps()} />
 
-          <AnimatePresence mode="wait">
-            {uploading ? (
-              <motion.div key="uploading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-center text-center gap-4">
-                <div className="relative w-16 h-16">
-                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border)" strokeWidth="5" />
-                    <motion.circle cx="32" cy="32" r="28" fill="none" stroke="var(--indigo)" strokeWidth="5" strokeLinecap="round"
-                      strokeDasharray={2 * Math.PI * 28}
-                      animate={{ strokeDashoffset: 2 * Math.PI * 28 * (1 - progress / 100) }}
-                      transition={{ duration: 0.4 }} />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center text-sm font-bold mono">{progress}%</div>
-                </div>
-                <p className="text-sm font-semibold">{STATUS_LABELS[status] || 'Working…'}</p>
-              </motion.div>
-            ) : error ? (
-              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-center text-center gap-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,107,107,0.1)' }}>
-                  <span className="text-xl">⚠</span>
-                </div>
-                <p className="text-sm font-semibold" style={{ color: 'var(--red)' }}>{error}</p>
-                <p className="text-xs" style={{ color: 'var(--dim)' }}>Click anywhere to try again</p>
-              </motion.div>
-            ) : (
-              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-center text-center gap-4">
-                <motion.div animate={{ y: isDragActive ? -6 : 0 }} className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--grad-soft)' }}>
-                  <svg width="22" height="22" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 11V3M8 3L5 6M8 3L11 6M3 13H13" stroke="var(--indigo)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+            <AnimatePresence mode="wait">
+              {uploading ? (
+                <motion.div key="uploading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center text-center gap-4">
+                  <div className="relative w-16 h-16">
+                    <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+                      <circle cx="32" cy="32" r="28" fill="none" stroke="var(--glass-2)" strokeWidth="5" />
+                      <motion.circle cx="32" cy="32" r="28" fill="none" stroke="var(--cyan)" strokeWidth="5" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 28}
+                        animate={{ strokeDashoffset: 2 * Math.PI * 28 * (1 - progress / 100) }}
+                        transition={{ duration: 0.4 }} />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-sm font-bold mono">{progress}%</div>
+                  </div>
+                  <p className="text-sm font-semibold">{STATUS_LABELS[status] || 'Working…'}</p>
                 </motion.div>
-                <div>
-                  <p className="text-base font-bold mb-1">{isDragActive ? 'Drop it here!' : 'Drag & drop your file'}</p>
-                  <p className="text-sm" style={{ color: 'var(--muted)' }}>or <span className="grad-text font-semibold">browse</span> from your computer</p>
-                </div>
-                <div className="flex gap-2 mt-1">
-                  {['CSV', 'XLSX', 'XLS'].map(ext => (
-                    <span key={ext} className="text-xs font-bold mono px-2.5 py-1 rounded-lg" style={{ background: 'var(--surface-2)', color: FILE_COLORS[ext] || 'var(--muted)' }}>{ext}</span>
-                  ))}
-                </div>
-                <p className="text-xs" style={{ color: 'var(--dim)' }}>Max 10MB</p>
+              ) : error ? (
+                <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center text-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl" style={{ background: 'rgba(255,111,156,0.1)' }}>⚠</div>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--coral)' }}>{error}</p>
+                  <p className="text-xs" style={{ color: 'var(--dim)' }}>Click anywhere to try again</p>
+                </motion.div>
+              ) : (
+                <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center text-center gap-4">
+                  <motion.div animate={{ y: isDragActive ? -8 : 0, scale: isDragActive ? 1.1 : 1 }} className="w-16 h-16 rounded-2xl flex items-center justify-center relative" style={{ background: 'var(--grad-1)' }}>
+                    <svg width="26" height="26" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 11V3M8 3L5 6M8 3L11 6M3 13H13" stroke="#05060A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <div className="absolute inset-0 rounded-2xl" style={{ background: 'var(--grad-1)', filter: 'blur(20px)', opacity: 0.5, zIndex: -1 }} />
+                  </motion.div>
+                  <div>
+                    <p className="text-lg font-bold mb-1">{isDragActive ? 'Drop it here!' : 'Drag & drop your file'}</p>
+                    <p className="text-sm" style={{ color: 'var(--muted)' }}>or <span className="grad-text-1 font-bold">browse</span> to upload</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Format info cards — bento side column */}
+          <div className="grid grid-cols-2 sm:grid-cols-1 gap-3">
+            {[
+              { ext: 'CSV', desc: 'Comma-separated', color: 'var(--lime)' },
+              { ext: 'XLSX', desc: 'Excel workbook', color: 'var(--violet)' },
+              { ext: '10MB', desc: 'Max file size', color: 'var(--cyan)' },
+            ].map((f, i) => (
+              <motion.div key={f.ext} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                className="rounded-2xl p-4 glass flex flex-col justify-center">
+                <p className="text-lg font-bold mono mb-0.5" style={{ color: f.color }}>{f.ext}</p>
+                <p className="text-xs" style={{ color: 'var(--dim)' }}>{f.desc}</p>
               </motion.div>
-            )}
-          </AnimatePresence>
+            ))}
+          </div>
         </div>
 
         {/* Recent datasets */}
@@ -173,33 +174,34 @@ export default function UploadZone({ onDatasetLoaded, subscribe }: Props) {
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-bold">Recent uploads</p>
             {datasets.length > 0 && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--surface-2)', color: 'var(--muted)' }}>{datasets.length}</span>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full mono" style={{ background: 'var(--glass-2)', color: 'var(--muted)' }}>{datasets.length}</span>
             )}
           </div>
 
           {loadingList ? (
-            <div className="space-y-2.5">
-              {[1,2].map(i => <div key={i} className="h-[68px] rounded-2xl skeleton" />)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[1,2].map(i => <div key={i} className="h-20 rounded-2xl skeleton" />)}
             </div>
           ) : datasets.length === 0 ? (
-            <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-              <p className="text-sm" style={{ color: 'var(--dim)' }}>No datasets yet — upload one above to get started ✨</p>
+            <div className="rounded-2xl p-8 text-center glass">
+              <p className="text-sm" style={{ color: 'var(--dim)' }}>No datasets yet — upload one to get started</p>
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {datasets.map((ds, i) => {
                 const ext = ds.fileName?.split('.').pop()?.toUpperCase() || '';
+                const glow = FILE_GLOW[ext] || 'var(--cyan)';
                 return (
                   <motion.div key={ds.fileId}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                     whileHover={{ scale: 1.01 }}
-                    className="flex items-center justify-between px-5 py-4 rounded-2xl cursor-pointer transition-shadow lift group"
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+                    className="flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-smooth glass group"
                     onClick={() => getDataset(ds.fileId).then(onDatasetLoaded).catch(() => {})}
+                    style={{ borderColor: 'var(--glass-br)' }}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-2)' }}>
-                        <span className="text-xs font-bold mono" style={{ color: FILE_COLORS[ext] || 'var(--muted)' }}>{ext.slice(0,4)}</span>
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 relative" style={{ background: 'var(--glass-2)' }}>
+                        <span className="text-xs font-bold mono" style={{ color: glow }}>{ext.slice(0,4)}</span>
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold truncate">{ds.fileName}</p>
@@ -210,7 +212,7 @@ export default function UploadZone({ onDatasetLoaded, subscribe }: Props) {
                     </div>
                     <button onClick={(e) => handleDelete(ds.fileId, e)}
                       className="w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                      style={{ background: 'var(--surface-2)', color: 'var(--red)' }}>
+                      style={{ background: 'var(--glass-2)', color: 'var(--coral)' }}>
                       <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
                         <path d="M3 4H13M6 4V2.5C6 2.2 6.2 2 6.5 2H9.5C9.8 2 10 2.2 10 2.5V4M12 4V13C12 13.5 11.5 14 11 14H5C4.5 14 4 13.5 4 13V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
