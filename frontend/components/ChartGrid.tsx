@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, ScatterChart, Scatter, CartesianGrid,
@@ -8,34 +9,34 @@ import { getChartData, getScatterData } from '@/lib/api';
 
 interface Props { fileId: string; columns: any[]; }
 
-const PALETTE = ['#58a6ff', '#bc8cff', '#3fb950', '#d29922', '#f78166', '#79c0ff', '#a5d6ff', '#7ee787'];
+const PALETTE = ['#6D5EF5', '#FF6FA8', '#2DD4A7', '#FFB547', '#8B7CFF', '#FF8FBF', '#5EEAD4', '#FFD166'];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="px-3 py-2 rounded-md text-xs mono"
-      style={{ background: 'var(--surface-3)', border: '1px solid var(--border-2)', color: 'var(--text)' }}>
-      <p className="mb-1" style={{ color: 'var(--dim)' }}>{label}</p>
+    <div className="px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'var(--text)', color: 'white', boxShadow: 'var(--shadow-md)' }}>
+      <p className="mb-1 opacity-60 mono">{label}</p>
       {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color || p.fill }}>{p.name}: {typeof p.value === 'number' ? p.value.toLocaleString() : p.value}</p>
+        <p key={i} className="mono">{p.name}: {typeof p.value === 'number' ? p.value.toLocaleString() : p.value}</p>
       ))}
     </div>
   );
 };
 
-function ChartCard({ title, num, children }: { title: string; num: string; children: React.ReactNode }) {
+function ChartCard({ title, emoji, children, delay = 0 }: { title: string; emoji: string; children: React.ReactNode; delay?: number }) {
   return (
-    <div className="rounded-lg overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-      <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-        <span className="text-xs mono px-1.5 py-0.5 rounded" style={{ background: 'var(--surface-2)', color: 'var(--dim)' }}>{num}</span>
-        <p className="text-xs font-medium truncate" style={{ color: 'var(--muted)' }}>{title}</p>
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
+      className="rounded-2xl p-5 lift" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-base">{emoji}</span>
+        <p className="text-sm font-bold">{title}</p>
       </div>
-      <div className="p-3">{children}</div>
-    </div>
+      {children}
+    </motion.div>
   );
 }
 
-const axisProps = { tick: { fontSize: 10, fill: 'var(--dim)', fontFamily: 'var(--font-mono)' }, stroke: 'var(--border-2)' };
+const axisProps = { tick: { fontSize: 10, fill: 'var(--dim)', fontFamily: 'var(--font-mono)' }, stroke: 'var(--border)' };
 
 export default function ChartGrid({ fileId, columns }: Props) {
   const [charts, setCharts] = useState<Record<string, any>>({});
@@ -61,39 +62,36 @@ export default function ChartGrid({ fileId, columns }: Props) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {[1,2,3,4].map(i => <div key={i} className="h-64 rounded-lg animate-pulse" style={{ background: 'var(--surface)' }} />)}
+        {[1,2,3,4].map(i => <div key={i} className="h-72 rounded-2xl skeleton" />)}
       </div>
     );
   }
 
-  let n = 0;
-  const next = () => String(++n).padStart(2, '0');
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       {charts.num0 && (
-        <ChartCard num={next()} title={`${charts.num0.column} — distribution`}>
+        <ChartCard emoji="📊" title={`${charts.num0.column} distribution`} delay={0}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={charts.num0.data}>
-              <CartesianGrid strokeDasharray="2 3" stroke="var(--border)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="range" {...axisProps} interval="preserveStartEnd" />
               <YAxis {...axisProps} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
-              <Bar dataKey="count" fill="var(--blue)" radius={[2, 2, 0, 0]} maxBarSize={28} />
+              <Bar dataKey="count" fill="var(--indigo)" radius={[8, 8, 0, 0]} maxBarSize={32} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       )}
 
       {charts.cat0 && (
-        <ChartCard num={next()} title={`${charts.cat0.column} — top values`}>
+        <ChartCard emoji="🏷️" title={`${charts.cat0.column} top values`} delay={0.05}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={charts.cat0.data} layout="vertical" margin={{ left: 8 }}>
-              <CartesianGrid strokeDasharray="2 3" stroke="var(--border)" horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
               <XAxis type="number" {...axisProps} />
               <YAxis dataKey="name" type="category" {...axisProps} width={90} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
-              <Bar dataKey="value" radius={[0, 2, 2, 0]} maxBarSize={16}>
+              <Bar dataKey="value" radius={[0, 8, 8, 0]} maxBarSize={18}>
                 {charts.cat0.data.map((_: any, i: number) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} />)}
               </Bar>
             </BarChart>
@@ -102,43 +100,43 @@ export default function ChartGrid({ fileId, columns }: Props) {
       )}
 
       {charts.num1 && (
-        <ChartCard num={next()} title={`${charts.num1.column} — distribution`}>
+        <ChartCard emoji="📈" title={`${charts.num1.column} distribution`} delay={0.1}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={charts.num1.data}>
-              <CartesianGrid strokeDasharray="2 3" stroke="var(--border)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="range" {...axisProps} interval="preserveStartEnd" />
               <YAxis {...axisProps} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
-              <Bar dataKey="count" fill="var(--purple)" radius={[2, 2, 0, 0]} maxBarSize={28} />
+              <Bar dataKey="count" fill="var(--pink)" radius={[8, 8, 0, 0]} maxBarSize={32} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       )}
 
       {charts.scatter && (
-        <ChartCard num={next()} title={`${charts.scatter.xCol} vs ${charts.scatter.yCol}`}>
+        <ChartCard emoji="✨" title={`${charts.scatter.xCol} vs ${charts.scatter.yCol}`} delay={0.15}>
           <ResponsiveContainer width="100%" height={220}>
             <ScatterChart>
-              <CartesianGrid strokeDasharray="2 3" stroke="var(--border)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="x" type="number" name={charts.scatter.xCol} {...axisProps} />
               <YAxis dataKey="y" type="number" name={charts.scatter.yCol} {...axisProps} />
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '2 3', stroke: 'var(--border-2)' }} />
-              <Scatter data={charts.scatter.data} fill="var(--green)" opacity={0.6} r={2.5} />
+              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: 'var(--border-2)' }} />
+              <Scatter data={charts.scatter.data} fill="var(--green)" opacity={0.7} r={3} />
             </ScatterChart>
           </ResponsiveContainer>
         </ChartCard>
       )}
 
       {charts.cat0 && charts.cat0.data.length <= 10 && (
-        <ChartCard num={next()} title={`${charts.cat0.column} — share`}>
+        <ChartCard emoji="🍕" title={`${charts.cat0.column} share`} delay={0.2}>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={charts.cat0.data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={75}
-                paddingAngle={2}
+              <Pie data={charts.cat0.data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={48} outerRadius={78}
+                paddingAngle={3} cornerRadius={6}
                 label={({ percent }: any) => `${((percent ?? 0) * 100).toFixed(0)}%`}
                 labelLine={false}
-                style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fill: 'var(--muted)' }}>
-                {charts.cat0.data.map((_: any, i: number) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} stroke="var(--surface)" strokeWidth={2} />)}
+                style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', fill: 'var(--muted)' }}>
+                {charts.cat0.data.map((_: any, i: number) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} stroke="var(--surface)" strokeWidth={3} />)}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
