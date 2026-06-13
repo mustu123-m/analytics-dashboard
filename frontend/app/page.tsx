@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/AuthContext';
 import AuthPage from '@/components/AuthPage';
 import UploadZone from '@/components/UploadZone';
@@ -16,8 +17,11 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="flex gap-1">
-          {[0,1,2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ background: 'var(--blue)', animationDelay: `${i*0.2}s` }} />)}
+        <div className="flex gap-2">
+          {[0,1,2].map(i => (
+            <motion.span key={i} className="w-3 h-3 rounded-full" style={{ background: i === 0 ? 'var(--indigo)' : i === 1 ? 'var(--pink)' : 'var(--amber)' }}
+              animate={{ y: [0, -10, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
+          ))}
         </div>
       </div>
     );
