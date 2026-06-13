@@ -117,18 +117,15 @@ export default function UploadZone({ onDatasetLoaded, subscribe }: Props) {
 
             <AnimatePresence mode="wait">
               {uploading ? (
-                <motion.div key="uploading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center text-center gap-4">
-                  <div className="relative w-16 h-16">
-                    <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-                      <circle cx="32" cy="32" r="28" fill="none" stroke="var(--glass-2)" strokeWidth="5" />
-                      <motion.circle cx="32" cy="32" r="28" fill="none" stroke="var(--cyan)" strokeWidth="5" strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 28}
-                        animate={{ strokeDashoffset: 2 * Math.PI * 28 * (1 - progress / 100) }}
-                        transition={{ duration: 0.4 }} />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center text-sm font-bold mono">{progress}%</div>
+                <motion.div key="uploading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center text-center gap-4 w-full max-w-xs mx-auto">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold mono" style={{ background: 'var(--grad-1)', color: '#05060A' }}>
+                    {progress}%
                   </div>
                   <p className="text-sm font-semibold">{STATUS_LABELS[status] || 'Working…'}</p>
+                  <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--glass-2)' }}>
+                    <motion.div className="h-full rounded-full" style={{ background: 'var(--grad-1)' }}
+                      animate={{ width: `${progress}%` }} transition={{ duration: 0.4 }} />
+                  </div>
                 </motion.div>
               ) : error ? (
                 <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center text-center gap-3">
