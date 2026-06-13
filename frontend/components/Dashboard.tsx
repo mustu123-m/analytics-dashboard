@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import KPICards from './KPICards';
 import ChartGrid from './ChartGrid';
 import AIInsights from './AIInsights';
@@ -14,11 +15,11 @@ interface Props {
 
 type Tab = 'overview' | 'charts' | 'ai' | 'chat';
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'charts', label: 'Charts' },
-  { id: 'ai', label: 'Insights' },
-  { id: 'chat', label: 'Ask AI' },
+const TABS: { id: Tab; label: string; emoji: string }[] = [
+  { id: 'overview', label: 'Overview', emoji: '📊' },
+  { id: 'charts', label: 'Charts', emoji: '📈' },
+  { id: 'ai', label: 'Insights', emoji: '✨' },
+  { id: 'chat', label: 'Ask AI', emoji: '💬' },
 ];
 
 export default function Dashboard({ dataset, subscribe }: Props) {
@@ -34,71 +35,67 @@ export default function Dashboard({ dataset, subscribe }: Props) {
   const numericCols = dataset.columns?.filter((c: any) => c.type === 'number').length ?? 0;
   const catCols = dataset.columns?.filter((c: any) => c.type === 'string').length ?? 0;
 
+  const stats = [
+    { label: 'Rows', value: dataset.rowCount?.toLocaleString(), color: 'var(--indigo)' },
+    { label: 'Columns', value: dataset.columns?.length, color: 'var(--pink)' },
+    { label: 'Numeric', value: numericCols, color: 'var(--green)' },
+    { label: 'Categorical', value: catCols, color: 'var(--amber)' },
+    { label: 'Complete', value: `${dataset.summary?.completeness}%`, color: 'var(--green)' },
+  ];
+
   return (
-    <div className="h-full flex flex-col">
-      {/* Ticker strip — signature element */}
-      <div className="flex-shrink-0 overflow-hidden h-8 flex items-center"
-        style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-8 px-6 whitespace-nowrap ticker-track" style={{ width: 'max-content' }}>
-          {[...Array(2)].map((_, dup) => (
-            <div key={dup} className="flex items-center gap-8">
-              <TickerItem label="ROWS" value={dataset.rowCount?.toLocaleString()} />
-              <TickerItem label="COLS" value={dataset.columns?.length} />
-              <TickerItem label="NUMERIC" value={numericCols} color="var(--blue)" />
-              <TickerItem label="CATEGORICAL" value={catCols} color="var(--purple)" />
-              <TickerItem label="COMPLETE" value={`${dataset.summary?.completeness}%`} color="var(--green)" />
-              <TickerItem label="FILE" value={dataset.fileName} mono={false} />
-            </div>
+    <div className="h-full flex flex-col" style={{ background: 'var(--bg)' }}>
+      {/* Header */}
+      <div className="flex-shrink-0 px-6 sm:px-8 pt-6 pb-0">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
+          <p className="text-xs font-bold mono mb-1" style={{ color: 'var(--dim)' }}>DATASET</p>
+          <h1 className="text-2xl font-extrabold tracking-tight">{dataset.fileName}</h1>
+        </motion.div>
+
+        {/* Stat pills */}
+        <div className="flex gap-2.5 overflow-x-auto pb-5 -mx-1 px-1">
+          {stats.map((s, i) => (
+            <motion.div key={s.label} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
+              className="flex-shrink-0 rounded-2xl px-4 py-3 min-w-[110px]" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: 'var(--muted)' }}>{s.label}</p>
+              <p className="text-xl font-extrabold mono" style={{ color: s.color }}>{s.value}</p>
+            </motion.div>
           ))}
         </div>
-      </div>
 
-      {/* Header + tabs */}
-      <div className="flex-shrink-0 px-6 pt-5 pb-0" style={{ borderBottom: '1px solid var(--border)' }}>
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight mb-0.5">{dataset.fileName}</h1>
-            <p className="text-xs mono" style={{ color: 'var(--dim)' }}>
-              dataset_id: {dataset.fileId?.slice(0, 18)}…
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-6">
+        {/* Tabs */}
+        <div className="flex gap-1 -mx-1 px-1 overflow-x-auto">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className="text-sm font-medium pb-2.5 transition-colors relative"
-              style={{ color: tab === t.id ? 'var(--text)' : 'var(--dim)' }}>
-              {t.label}
+              className="relative px-4 py-2.5 text-sm font-bold rounded-xl transition-colors flex items-center gap-1.5 flex-shrink-0"
+              style={{ color: tab === t.id ? 'var(--indigo)' : 'var(--muted)' }}>
+              <span>{t.emoji}</span>{t.label}
               {tab === t.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--blue)' }} />
+                <motion.div layoutId="tab-bg" className="absolute inset-0 rounded-xl -z-10" style={{ background: 'var(--grad-soft)' }} transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }} />
               )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Tab content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        {tab === 'overview' && (
-          <div className="space-y-6 fade-up">
-            <KPICards kpiData={kpiData} summary={dataset.summary} />
-            <CorrelationMatrix fileId={dataset.fileId} />
-          </div>
-        )}
-        {tab === 'charts' && <div className="fade-up"><ChartGrid fileId={dataset.fileId} columns={dataset.columns} /></div>}
-        {tab === 'ai' && <div className="fade-up"><AIInsights fileId={dataset.fileId} /></div>}
-        {tab === 'chat' && <div className="fade-up"><AIChat fileId={dataset.fileId} fileName={dataset.fileName} /></div>}
-      </div>
-    </div>
-  );
-}
+      <div className="h-px flex-shrink-0" style={{ background: 'var(--border)' }} />
 
-function TickerItem({ label, value, color, mono = true }: { label: string; value: any; color?: string; mono?: boolean }) {
-  return (
-    <div className="flex items-baseline gap-2">
-      <span className="text-xs mono" style={{ color: 'var(--dim)' }}>{label}</span>
-      <span className={`text-xs font-medium ${mono ? 'mono' : ''}`} style={{ color: color || 'var(--text)' }}>{value}</span>
+      {/* Tab content */}
+      <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6">
+        <AnimatePresence mode="wait">
+          <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+            {tab === 'overview' && (
+              <div className="space-y-6">
+                <KPICards kpiData={kpiData} summary={dataset.summary} />
+                <CorrelationMatrix fileId={dataset.fileId} />
+              </div>
+            )}
+            {tab === 'charts' && <ChartGrid fileId={dataset.fileId} columns={dataset.columns} />}
+            {tab === 'ai' && <AIInsights fileId={dataset.fileId} />}
+            {tab === 'chat' && <AIChat fileId={dataset.fileId} fileName={dataset.fileName} />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
