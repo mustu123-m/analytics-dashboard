@@ -31,7 +31,8 @@ export default function Sidebar({ connected, onUploadClick, onDashboardClick, ha
   return (
     <>
       {/* Top navbar */}
-      <header className="flex-shrink-0 flex items-center justify-between px-4 sm:px-6 h-16 glass relative z-30" style={{ borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
+      <header className="flex-shrink-0 flex items-center justify-between px-4 sm:px-6 glass relative z-30"
+        style={{ borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none', minHeight: '64px', background: 'rgba(10,11,18,0.7)' }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center relative flex-shrink-0" style={{ background: 'var(--grad-1)' }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -61,7 +62,8 @@ export default function Sidebar({ connected, onUploadClick, onDashboardClick, ha
       </header>
 
       {/* Bottom mobile tab bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-6 py-3 glass" style={{ borderRadius: 0, borderBottom: 'none', borderLeft: 'none', borderRight: 'none' }}>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-6 py-3 glass"
+        style={{ borderRadius: 0, borderBottom: 'none', borderLeft: 'none', borderRight: 'none', background: 'rgba(10,11,18,0.85)' }}>
         <TabBtn icon={Icon.upload} label="Upload" active={activeView === 'upload'} onClick={onUploadClick} />
         <TabBtn icon={Icon.grid} label="Dashboard" active={activeView === 'dashboard'} onClick={onDashboardClick} disabled={!hasDataset} />
       </nav>
