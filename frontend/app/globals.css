@@ -1,13 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import '@fontsource/space-grotesk/400.css';
 @import '@fontsource/space-grotesk/500.css';
 @import '@fontsource/space-grotesk/600.css';
 @import '@fontsource/space-grotesk/700.css';
 @import '@fontsource/jetbrains-mono/400.css';
 @import '@fontsource/jetbrains-mono/500.css';
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 :root {
   --bg:        #05060A;
@@ -54,8 +54,8 @@ body {
 
 /* Glass surface */
 .glass {
-  background: var(--glass);
-  border: 1px solid var(--glass-br);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
