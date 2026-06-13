@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { login, register } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -29,113 +30,80 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
-      {/* Left — brand panel */}
-      <div className="hidden lg:flex flex-col justify-between w-[44%] p-12 relative overflow-hidden"
-        style={{ borderRight: '1px solid var(--border)' }}>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4" style={{ background: 'var(--bg)' }}>
+      <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full blob"
+        style={{ background: 'radial-gradient(circle, var(--indigo) 0%, transparent 70%)', opacity: 0.35 }} />
+      <div className="absolute top-1/3 -right-40 w-[420px] h-[420px] rounded-full blob blob-2"
+        style={{ background: 'radial-gradient(circle, var(--pink) 0%, transparent 70%)', opacity: 0.3 }} />
+      <div className="absolute -bottom-40 left-1/4 w-[400px] h-[400px] rounded-full blob blob-3"
+        style={{ background: 'radial-gradient(circle, var(--amber) 0%, transparent 70%)', opacity: 0.2 }} />
 
-        {/* grid texture */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{
-          backgroundImage: 'linear-gradient(var(--border-2) 1px, transparent 1px), linear-gradient(90deg, var(--border-2) 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
-        }} />
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: 'var(--blue)' }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M2 9L4.5 5L7 7L10 2" stroke="#08090d" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-sm font-semibold tracking-tight">DataPulse</span>
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-md rounded-3xl p-8 sm:p-10"
+        style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: 'var(--shadow-lg)' }}
+      >
+        <div className="flex items-center gap-2.5 mb-8">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'var(--grad)' }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 12L5.5 6L9 9L14 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
-          <p className="text-xs mono" style={{ color: 'var(--dim)' }}>v2.1.0 — analytics runtime</p>
+          <span className="text-base font-bold tracking-tight">DataPulse</span>
         </div>
 
-        {/* Centerpiece — a mock data readout */}
-        <div className="relative z-10 space-y-4">
-          <div className="space-y-1">
-            <p className="text-3xl font-semibold leading-tight tracking-tight" style={{ color: 'var(--text)' }}>
-              Upload data.<br />Ship insight.
-            </p>
-            <p className="text-sm mt-3 max-w-xs" style={{ color: 'var(--muted)' }}>
-              Drop a CSV or spreadsheet, get a live dashboard, correlations, and an AI analyst in the same view.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 pt-4 max-w-sm">
-            {[
-              { label: 'Parse time', value: '0.4s', color: 'var(--green)' },
-              { label: 'Chart types', value: '04', color: 'var(--blue)' },
-              { label: 'AI model', value: 'gemini-2.0', color: 'var(--purple)' },
-            ].map(s => (
-              <div key={s.label} className="p-3 rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <p className="text-xs mb-1" style={{ color: 'var(--dim)' }}>{s.label}</p>
-                <p className="text-sm font-semibold mono" style={{ color: s.color }}>{s.value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative z-10 flex items-center gap-2 text-xs" style={{ color: 'var(--dim)' }}>
-          <span className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ background: 'var(--green)' }} />
-          <span className="mono">system operational</span>
-        </div>
-      </div>
-
-      {/* Right — form */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm">
-          {/* mobile logo */}
-          <div className="lg:hidden flex items-center gap-2.5 mb-10">
-            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: 'var(--blue)' }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M2 9L4.5 5L7 7L10 2" stroke="#08090d" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-sm font-semibold tracking-tight">DataPulse</span>
-          </div>
-
-          <div className="mb-7">
-            <h1 className="text-xl font-semibold tracking-tight mb-1.5">
-              {mode === 'login' ? 'Sign in' : 'Create account'}
+        <AnimatePresence mode="wait">
+          <motion.div key={mode} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.2 }}>
+            <h1 className="text-2xl font-extrabold tracking-tight mb-1.5">
+              {mode === 'login' ? 'Welcome back' : 'Get started free'}
             </h1>
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              {mode === 'login' ? 'Access your datasets and dashboards' : 'Start analyzing your data with AI'}
+            <p className="text-sm mb-7" style={{ color: 'var(--muted)' }}>
+              {mode === 'login' ? 'Sign in to access your dashboards' : 'Upload data, get AI insights in seconds'}
             </p>
-          </div>
+          </motion.div>
+        </AnimatePresence>
 
-          <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={submit} className="space-y-3.5">
+          <AnimatePresence>
             {mode === 'register' && (
-              <Field label="Name" type="text" placeholder="Jane Doe" value={form.name} onChange={set('name')} />
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
+                <Field label="Full name" type="text" placeholder="Jane Doe" value={form.name} onChange={set('name')} />
+              </motion.div>
             )}
-            <Field label="Email" type="email" placeholder="you@company.com" value={form.email} onChange={set('email')} />
-            <Field label="Password" type="password" placeholder="••••••••" value={form.password} onChange={set('password')} />
+          </AnimatePresence>
+          <Field label="Email" type="email" placeholder="you@company.com" value={form.email} onChange={set('email')} />
+          <Field label="Password" type="password" placeholder="At least 6 characters" value={form.password} onChange={set('password')} />
 
+          <AnimatePresence>
             {error && (
-              <div className="flex items-start gap-2 px-3 py-2 rounded-md text-xs"
-                style={{ background: 'rgba(247,129,102,0.08)', border: '1px solid rgba(247,129,102,0.25)', color: 'var(--red)' }}>
-                <span className="mono">!</span>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                className="px-3.5 py-2.5 rounded-xl text-sm" style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', color: '#E64545' }}>
                 {error}
-              </div>
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            <button type="submit" disabled={loading}
-              className="w-full py-2.5 rounded-md text-sm font-medium transition-all disabled:opacity-50 mt-2"
-              style={{ background: 'var(--blue)', color: '#08090d' }}>
-              {loading ? 'Working…' : mode === 'login' ? 'Sign in' : 'Create account'}
-            </button>
-          </form>
+          <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={loading}
+            className="w-full py-3.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-60 mt-1"
+            style={{ background: 'var(--grad)', color: 'white', boxShadow: 'var(--shadow-glow)' }}>
+            {loading ? (
+              <span className="flex items-center justify-center gap-1.5">
+                {[0,1,2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full bg-white pulse-dot" style={{ animationDelay: `${i*0.15}s` }} />)}
+              </span>
+            ) : mode === 'login' ? 'Sign in' : 'Create account'}
+          </motion.button>
+        </form>
 
-          <div className="mt-6 pt-6 text-center" style={{ borderTop: '1px solid var(--border)' }}>
-            <button onClick={() => { setMode(m => m === 'login' ? 'register' : 'login'); setError(''); }}
-              className="text-xs transition-colors" style={{ color: 'var(--muted)' }}>
-              {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-              <span style={{ color: 'var(--blue)' }}>{mode === 'login' ? 'Sign up' : 'Sign in'}</span>
-            </button>
-          </div>
+        <div className="mt-7 pt-6 text-center" style={{ borderTop: '1px solid var(--border)' }}>
+          <button onClick={() => { setMode(m => m === 'login' ? 'register' : 'login'); setError(''); }}
+            className="text-sm font-medium" style={{ color: 'var(--muted)' }}>
+            {mode === 'login' ? "New here? " : 'Already have an account? '}
+            <span className="grad-text font-bold">{mode === 'login' ? 'Create an account' : 'Sign in'}</span>
+          </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -143,7 +111,7 @@ export default function AuthPage() {
 function Field({ label, ...props }: any) {
   return (
     <div>
-      <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>{label}</label>
+      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text)' }}>{label}</label>
       <input {...props} />
     </div>
   );
